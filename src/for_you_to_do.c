@@ -29,6 +29,54 @@ int get_block_size(){
 int mydgetrf(double *A, int *ipiv, int n) 
 {
     /* add your code here */
+    int i, j, k;
+    double* tmpr = (double*)malloc(sizeof(double) * n);
+    for (i = 0; i < n; i++)
+    {
+        int maxidx = i;
+        double max = fabs(A[i * n + i]);
+        for (j = i + 1; j < n; j++)
+        {
+            double tmp = fabs(A[j * n + i]);
+            if (tmp - max > 1e-6)
+            {
+                maxidx = j;
+                max = tmp;
+            }
+        }
+
+        //too small pivot is also unacceptable
+        if (fabs(max - 0.0) < 1e-3) 
+            return -1;
+
+        if (maxidx != i)
+        {
+            //ipiv[maxidx] = ipiv[maxidx] ^ ipiv[i];
+            //ipiv[i] = ipiv[maxidx] ^ ipiv[i];
+            //ipiv[maxidx] = ipiv[maxidx] ^ ipiv[i];
+            int temp = ipiv[i];
+            ipiv[i] = ipiv[maxidx];
+            ipiv[maxidx] = temp;
+            // swap rows
+            memcpy(tmpr, A + i*n, n * sizeof(double));
+            memcpy(A + i*n, A + maxidx*n, n * sizeof(double));
+            memcpy(A + maxidx*n, tmpr, n * sizeof(double));
+
+            //swap(A, tmpr, n, i, maxidx);
+        }
+
+        for (j = i + 1; j < n; j++)
+        {
+            A[j * n + i] = A[j * n + i] / A[i * n + i];
+            double A_j = A[j * n + i];
+            for (k = i + 1; k < n; k++)
+            {
+                A[j * n + k] -= A_j * A[i * n + k];
+            }
+        }
+    }
+    free(tmpr);
+    return 0;
 
     return 0;
 }
