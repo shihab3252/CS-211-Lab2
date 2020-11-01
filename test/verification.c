@@ -74,14 +74,6 @@ int test_all_lu_functions()
 
         if (verify_matrix(A1, A3, n, n) || verify_matrix(B1, B3, n, 1))
             printf("my block LU is incorrect.\n");
-        
-        t0 = get_sec();    
-        block_naive(A3, B3, n,  block_size);
-        t1 = get_sec();
-        printf("Elapsed time, block NAIVE: %lf seconds, BlockSize: %d\n", t1 - t0, block_size);
-
-        if (verify_matrix(A1, A3, n, n) || verify_matrix(B1, B3, n, 1))
-            printf("my block NAIVE is incorrect.\n");
 
         free(A1);
         free(A2);
