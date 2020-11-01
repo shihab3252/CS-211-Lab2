@@ -3,7 +3,7 @@
 int get_block_size(){
     //return the block size you'd like to use 
     /*add your code here */
-    return 66;
+    return 126;
   
 }
 
@@ -203,6 +203,22 @@ void mydgemm(double *A, double *B, double *C, int n, int i, int j, int k, int b)
         }
     }
 }
+void bijk(double *A, double *B, double *C, int n, int i, int j, int k, int b)
+{
+    int i1 = i, j1 = j, k1 = k;
+    for (i1 = i; i1 < i + b && i1 < n; i1++)
+    {
+        for (j1 = j; j1 < j + b && j1 < n; j1++)
+        {
+            register double r = C[i1 * n + j1];
+            for (k1 = k; k1 < k + b && k1 < n; k1++)
+            {
+                r += A[i1 * n + k1] * B[k1 * n + j1];
+            }
+            C[i1 * n + j1] = r;
+        }
+    }
+}
 
 /**
  * 
@@ -296,7 +312,7 @@ int mydgetrf_block(double *A, int *ipiv, int n, int b)
         // update A(end+1:n, end+1:n)
         for (i = ib+b; i < n; i += b){
             for (j = ib+b; j < n; j += b){
-                mydgemm(A, A, A, n, i, j, ib, b);
+                bijk(A, A, A, n, i, j, ib, b);
             }
         }
     }
