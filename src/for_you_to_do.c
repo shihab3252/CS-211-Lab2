@@ -410,14 +410,14 @@ int mydgetrf_non_squrare_naive(double* A, int pos, int* ipiv, int n, int bm, int
         transpose(LLT, bn, bn);
 
         //A(ib:end , end+1:n) = LL-1 * A(ib:end , end+1:n)
-        mydgemm(LLT, AUR, AURD, bn, bn, bn2, b);
+        mydgemm(LLT, AUR, AURD, n, bn, bn, bn2, b);
 
         for (i = 0; i < bn; i++)
         {
             memcpy(A + i * n + bn, AURD + i * bn2, bn2 * sizeof(double));
         }
         //A(end+1:n , end+1:n )-= A(end+1:n , ib:end) * A(ib:end , end+1:n)    
-        mydgemm(A + bn * n, A + bn, A + bn * n + bn, bn2, bn, bn2, n, b);
+        mydgemm(A + bn * n, A + bn, A + bn * n + bn, n, bn2, bn, bn2, b);
     }
 
     free(LLT);
