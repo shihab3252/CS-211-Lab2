@@ -28,21 +28,19 @@ int get_block_size(){
 
 int mydgetrf(double *A, int *ipiv, int n) 
 {
-    int i, maxIndex;
+    int i, maxI;
     double max;
-    double *temprow = (double*) malloc(sizeof(double) * n);
-    for (i = 0; i < n; i++)
-    {
+    double *tmpr = (double*) malloc(sizeof(double) * n);
+    for (i = 0; i < n; i++){
         // pivoting
-        maxIndex = i;
+        maxI = i;
         max = fabs(A[i*n + i]);
         
         int j;
-        for (j = i+1; j < n; j++)
-        {
+        for (j = i+1; j < n; j++){
             if (fabs(A[j*n + i]) > max)
             {
-                maxIndex = j;
+                maxI = j;
                 max = fabs(A[j*n + i]);
             }
         }
@@ -53,31 +51,29 @@ int mydgetrf(double *A, int *ipiv, int n)
         }
         else
         {
-            if (maxIndex != i)
+            if (maxI != i)
             {
-                // save pivoting information
+                // pivoting is done here
                 int temp = ipiv[i];
-                ipiv[i] = ipiv[maxIndex];
-                ipiv[maxIndex] = temp;
+                ipiv[i] = ipiv[maxI];
+                ipiv[maxI] = temp;
                 // swap rows
-                memcpy(temprow, A + i*n, n * sizeof(double));
-                memcpy(A + i*n, A + maxIndex*n, n * sizeof(double));
-                memcpy(A + maxIndex*n, temprow, n * sizeof(double));
+                memcpy(tmpr, A + i*n, n * sizeof(double));
+                memcpy(A + i*n, A + maxI*n, n * sizeof(double));
+                memcpy(A + maxI*n, tmpr, n * sizeof(double));
             }
         }
 
-        // factorization
-        for (j = i+1; j < n; j++)
-        {
+        // factorization is done here
+        for (j = i+1; j < n; j++){
             A[j*n + i] = A[j*n + i] / A[i*n + i];
             int k;
-            for (k = i+1; k < n; k++)
-            {
+            for (k = i+1; k < n; k++){
                 A[j*n + k] -= A[j*n +i] * A[i*n + k];
             }
         }
     }
-    free(temprow);
+    free(tmpr);
     return 0;
 }
 
@@ -117,11 +113,9 @@ void mydtrsv(char UPLO, double *A, double *B, int n, int *ipiv)
     if (UPLO == 'L')
     {
         y[0] = B[ipiv[0]];
-        for (i = 1; i < n; i++)
-        {
+        for (i = 1; i < n; i++){
             sum = 0.0;
-            for (j = 0; j < i; j++)
-            {
+            for (j = 0; j < i; j++){
                 sum += y[j] * A[i*n + j];
             }
             y[i] = B[ipiv[i]] - sum;
@@ -130,11 +124,9 @@ void mydtrsv(char UPLO, double *A, double *B, int n, int *ipiv)
     else if (UPLO == 'U')
     {
         y[n - 1] = B[n - 1] / A[(n-1)*n + n-1];
-        for (i = n-2; i >= 0; i--)
-        {
+        for (i = n-2; i >= 0; i--){
             sum = 0;
-            for (j = i+1; j < n; j++)
-            {
+            for (j = i+1; j < n; j++){
                 sum += y[j] * A[i*n + j];
             }
             y[i] = (B[i] - sum) / A[i*n + i];
@@ -159,10 +151,8 @@ void mydgemm(double *A, double *B, double *C, int n, int i, int j, int k, int b)
     int nj = j + b > n ? n : j + b;
     int nk = k + b > n ? n : k + b;
 
-    for (i1 = i; i1 < ni; i1 += 3)
-    {
-        for (j1 = j; j1 < nj; j1 += 3)
-        {
+    for (i1 = i; i1 < ni; i1 += 3){
+        for (j1 = j; j1 < nj; j1 += 3){
             int t = i1 * n + j1;
             int tt = t + n;
             int ttt = tt + n;
@@ -176,11 +166,9 @@ void mydgemm(double *A, double *B, double *C, int n, int i, int j, int k, int b)
             register double c21 = C[ttt + 1];
             register double c22 = C[ttt + 2];
 
-            for (k1 = k; k1 < nk; k1 += 3)
-            {
+            for (k1 = k; k1 < nk; k1 += 3){
 		int l;
-                for (l = 0; l < 3; l++)
-                {
+                for (l = 0; l < 3; l++){
                     int ta = i1 * n + k1 + l;
                     int tta = ta + n;
                     int ttta = tta + n;
@@ -246,24 +234,21 @@ void mydgemm(double *A, double *B, double *C, int n, int i, int j, int k, int b)
  **/
 int mydgetrf_block(double *A, int *ipiv, int n, int b) 
 {
-    int ib, i, j, k, maxIndex;
+    int ib, i, j, k, maxI;
     double max, sum;
-    double *temprow = (double*) malloc(sizeof(double) * n);
+    double *tmpr = (double*) malloc(sizeof(double) * n);
 
-    for (ib = 0; ib < n; ib += b)
-    {
-        for (i = ib; i < ib+b && i < n; i++)
-        {
+    for (ib = 0; ib < n; ib += b){
+        for (i = ib; i < ib+b && i < n; i++){
             // pivoting
-            maxIndex = i;
+            maxI = i;
             max = fabs(A[i*n + i]);
             
             int j;
-            for (j = i+1; j < n; j++)
-            {
+            for (j = i+1; j < n; j++){
                 if (fabs(A[j*n + i]) > max)
                 {
-                    maxIndex = j;
+                    maxI = j;
                     max = fabs(A[j*n + i]);
                 }
             }
@@ -274,39 +259,34 @@ int mydgetrf_block(double *A, int *ipiv, int n, int b)
             }
             else
             {
-                if (maxIndex != i)
+                if (maxI != i)
                 {
                     // save pivoting information
                     int temp = ipiv[i];
-                    ipiv[i] = ipiv[maxIndex];
-                    ipiv[maxIndex] = temp;
+                    ipiv[i] = ipiv[maxI];
+                    ipiv[maxI] = temp;
                     // swap rows
-                    memcpy(temprow, A + i*n, n * sizeof(double));
-                    memcpy(A + i*n, A + maxIndex*n, n * sizeof(double));
-                    memcpy(A + maxIndex*n, temprow, n * sizeof(double));
+                    memcpy(tmpr, A + i*n, n * sizeof(double));
+                    memcpy(A + i*n, A + maxI*n, n * sizeof(double));
+                    memcpy(A + maxI*n, tmpr, n * sizeof(double));
                 }
             }
 
             // factorization
-            for (j = i+1; j < n; j++)
-            {
+            for (j = i+1; j < n; j++){
                 A[j*n + i] = A[j*n + i] / A[i*n + i];
                 int k;
-                for (k = i+1; k < ib+b && k < n; k++)
-                {
+                for (k = i+1; k < ib+b && k < n; k++){
                     A[j*n + k] -= A[j*n +i] * A[i*n + k];
                 }
             }
         }
 
         // update A(ib:end, end+1:n)
-        for (i = ib; i < ib+b && i < n; i++)
-        {
-            for (j = ib+b; j < n; j++)
-            {
+        for (i = ib; i < ib+b && i < n; i++){
+            for (j = ib+b; j < n; j++){
                 sum = 0;
-                for (k = ib; k < i; k++)
-                {
+                for (k = ib; k < i; k++){
                     sum += A[i*n + k] * A[k*n + j];
                 }
                 A[i*n + j] -= sum;
@@ -314,14 +294,154 @@ int mydgetrf_block(double *A, int *ipiv, int n, int b)
         }
 
         // update A(end+1:n, end+1:n)
-        for (i = ib+b; i < n; i += b)
-        {
-            for (j = ib+b; j < n; j += b)
-            {
+        for (i = ib+b; i < n; i += b){
+            for (j = ib+b; j < n; j += b){
                 mydgemm(A, A, A, n, i, j, ib, b);
             }
         }
     }
     return 0;
 }
+void swap(double* A, double* tmpr, int n, int r1, int r2)
+{
+    memcpy(tmpr, A + r1 * n, n * sizeof(double));
+    memcpy(A + r1 * n, A + r2 * n, n * sizeof(double));
+    memcpy(A + r2 * n, tmpr, n * sizeof(double));
+}
+void transpose(double* A, int m, int n)
+{
+    int i, j;
+    double *tmp = (double*)malloc(sizeof(double) * n * m);
+    for (i = 0; i < n; i++)
+    {
+        for (j = 0; j < m; j++)
+        {
+            tmp[i * n + j] = A[j * n + i];
+        }
+    }
+    memcpy(A, tmp, sizeof(double) * n * m);
+    free(tmp);
+}
+int mydgetrf_non_squrare_naive(double* A, int pos, int* ipiv, int n, int bm, int bn, int b)
+{
+    /* add your code here */
+    int i, j, k, i1, j1;
+    int bn2 = bm - bn;
+    double* tmpr = (double*)malloc(sizeof(double) * n);
+    double* LLT = (double*)malloc(sizeof(double) * bn * bn);
+    double* AUR = (double*)malloc(sizeof(double) * bn * bn2);
+    double* AURD = (double*)malloc(sizeof(double) * bn * bn2);
+    double* ALLD = (double*)malloc(sizeof(double) * bn2 * bn);
+    double* LL = (double*)malloc(sizeof(double) * bn * bn);
+    int* ipivl = (int*)malloc(sizeof(int) * bn);
+
+    for (i = 0; i < bn; i++)
+    {
+        int maxidx = i;
+        double max = fabs(A[i * n + i]);
+        for (j = i + 1; j < bm; j++)
+        {
+            double tmp = fabs(A[j * n + i]);
+            if (tmp - max > 1e-6)
+            {
+                maxidx = j;
+                max = tmp;
+            }
+        }
+
+        //too small pivot is also unacceptable
+        if (fabs(max - 0.0) < 1e-3)
+            return -1;
+
+        if (maxidx != i)
+        {
+            int newMaxidx = pos + maxidx;
+            int newI      = pos + i;
+            ipiv[newMaxidx] = ipiv[newMaxidx] ^ ipiv[newI];
+            ipiv[newI] = ipiv[newMaxidx] ^ ipiv[newI];
+            ipiv[newMaxidx] = ipiv[newMaxidx] ^ ipiv[newI];
+
+            swap(A-pos, tmpr, n, i, maxidx);
+        }
+
+        for (j = i + 1; j < bm; j++)
+        {
+            A[j * n + i] = A[j * n + i] / A[i * n + i];
+            double A_j = A[j * n + i];
+            for (k = i + 1; k < bn; k++)
+            {
+                A[j * n + k] -= A_j * A[i * n + k];
+            }
+        }
+    }
+
+    if (bn2 > 0)
+    {
+        memset(LLT, 0, bn * bn * sizeof(double));
+        memset(LL, 0, bn * bn * sizeof(double));
+        memset(ipivl, 0, bn * sizeof(int));
+        memset(AUR, 0, bn * bn2 * sizeof(double));
+        memset(AURD, 0, bn * bn2 * sizeof(double));
+        memset(ALLD, 0, bn * bn2 * sizeof(double));
+
+        for (i = 0; i < bn; i++)
+        {
+            LLT[i * bn + i] = 1;
+            ipivl[i] = i;
+            
+            LL[i * bn + i] = 1;
+            for (j = 0; j < i; j++)
+            {
+                LL[i * bn + j] = A[i * n + j];
+            }
+        }
+            
+        for (i = 0; i < bn; i++)
+        {
+            memcpy(AUR + i * bn2, A + i * n + bn, bn2 * sizeof(double));
+        }
+
+        //get LL inverse and store in LLT
+        for (i = 0; i < bn; i++)
+        {
+            mydtrsv('L', LL, LLT + i * bn, bn, ipivl);
+        }
+
+        transpose(LLT, bn, bn);
+
+        //A(ib:end , end+1:n) = LL-1 * A(ib:end , end+1:n)
+        mydgemm(LLT, AUR, AURD, bn, bn, bn2, b);
+
+        for (i = 0; i < bn; i++)
+        {
+            memcpy(A + i * n + bn, AURD + i * bn2, bn2 * sizeof(double));
+        }
+        //A(end+1:n , end+1:n )-= A(end+1:n , ib:end) * A(ib:end , end+1:n)    
+        mydgemm(A + bn * n, A + bn, A + bn * n + bn, bn2, bn, bn2, n, b);
+    }
+
+    free(LLT);
+    free(LL);
+    free(ipivl);
+    free(AUR);
+    free(AURD);
+    free(tmpr);
+    return 0;
+}
+int mydgetrf_block_naive(double *A, int *ipiv, int n, int b) 
+{
+    int i, j, k;
+
+    double* Aptr = A;
+    for (i = 0; i < n - b; i += b)
+    {
+        mydgetrf_non_squrare_naive(Aptr, i, ipiv, n, n - i, b, b);
+        Aptr += b * n + b;
+    }
+    int blocksize = n % b > 0 ? n % b : b;
+    int bias = n - blocksize;
+    mydgetrf_non_squrare_naive(Aptr, bias, ipiv, n, blocksize, blocksize, blocksize);
+    return 0;
+}
+
 
