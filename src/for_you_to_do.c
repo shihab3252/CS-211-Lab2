@@ -213,7 +213,7 @@ void bijk(double *A, double *B, double *C, int n, int i, int j, int k, int b)
             register double r = C[i1 * n + j1];
             for (k1 = k; k1 < k + b && k1 < n; k1++)
             {
-                r += A[i1 * n + k1] * B[k1 * n + j1];
+                r -= A[i1 * n + k1] * B[k1 * n + j1];
             }
             C[i1 * n + j1] = r;
         }
